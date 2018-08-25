@@ -3,7 +3,7 @@
     <mip-fixed
       class="k-nav"
       type="left"
-      top="0">
+      top="44px">
       <div>
         <ul
           v-for="(val,index) in product"
@@ -144,6 +144,7 @@ export default {
     }
   },
   mounted () {
+    // MIP.viewer.fixedElement.init()
     // console.log('This is 产品分类 !')
     const self = this
     let pcid = getRequest().pcid

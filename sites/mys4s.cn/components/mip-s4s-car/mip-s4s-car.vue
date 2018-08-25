@@ -9,36 +9,38 @@
         ref="violation"
         data-type="mip"
         href="violation.html"/>
-      <div v-if="!!list.length">
-        <div
-          v-for="(car, index) in list"
-          :key="car.Id"
-          class="list">
-          <div class="bd">
-            <mip-img
-              v-show="isSelected != index"
-              src="https://s4s-imges.oss-cn-hangzhou.aliyuncs.com/xiongzhang/agree_empty.png"
-              width="25"
-              height="25"
-              @click="selected(index)" />
-            <mip-img
-              v-show="isSelected == index"
-              src="https://s4s-imges.oss-cn-hangzhou.aliyuncs.com/xiongzhang/agree.png"
-              width="25"
-              height="25"
-              @click="selected(index)" />
-            <div class="bd-fl">
-              <span
-                class="car-no"
-                @click="selected(index)" >{{ car.CarNo }}</span>
-              <span
-                class="car-info-edit orange"
-                @click="editCar(car)" >编辑</span>
-              <span
-                class="car-info-edit blue"
-                @click="delCar(car)" >删除</span>
-            </div>
+      <div class="list-container">
+        <div v-if="!!list.length">
+          <div
+            v-for="(car, index) in list"
+            :key="car.Id"
+            class="list">
+            <div class="bd">
+              <mip-img
+                v-show="isSelected != index"
+                src="https://s4s-imges.oss-cn-hangzhou.aliyuncs.com/xiongzhang/agree_empty.png"
+                width="22"
+                height="22"
+                @click="selected(index)" />
+              <mip-img
+                v-show="isSelected == index"
+                src="https://s4s-imges.oss-cn-hangzhou.aliyuncs.com/xiongzhang/agree.png"
+                width="22"
+                height="22"
+                @click="selected(index)" />
+              <div class="bd-fl">
+                <span
+                  class="car-no"
+                  @click="selected(index)" >{{ car.CarNo }}</span>
+                <span
+                  class="car-info-edit orange"
+                  @click="editCar(car)" >编辑</span>
+                <span
+                  class="car-info-edit blue"
+                  @click="delCar(car)" >删除</span>
+              </div>
             <!-- <mip-img class="s4s-option-out" @click="selected(car, index)" :src="isSelected == index ? 'https://s4s-imges.oss-cn-hangzhou.aliyuncs.com/xiongzhang/agree.png' : './https://s4s-imges.oss-cn-hangzhou.aliyuncs.com/xiongzhang/agree_empty.png'" ></mip-img> -->
+            </div>
           </div>
         </div>
       </div>
@@ -93,13 +95,10 @@ export default {
       delCarNo: ''
     }
   },
+  prerenderAllowed () {
+    return true
+  },
   mounted () {
-    this.user = {
-      Tel: window.localStorage.UserTel || window.UserTel || ''
-    }
-    // if (!this.user.Tel) {
-
-    // }
     this.getCar()
   },
   methods: {
@@ -176,8 +175,28 @@ export default {
       util
         .fetchData('v3/violation/car/list')
         .then(res => {
-          if (res.code === 0) {
+          if (res.code === 40000) {
+          } else if (res.code === 0) {
             self.list = res.data ? res.data : []
+            // 本地存储一波 保持本地localstorage为最新的
+            try {
+              let newLocalCarList = []
+              self.list.forEach(car => {
+                newLocalCarList.push({
+                  carNo: car.CarNo,
+                  engine: car.EngineNo,
+                  vin: car.ClassNo,
+                  car_type: car.CarType || ''
+                })
+              })
+              window.localStorage.setItem(
+                'localCarList',
+                JSON.stringify(newLocalCarList)
+              )
+            } catch (error) {
+              console.log(error)
+              // util.toast('由于您处在无痕模式，不能存储您的爱车的记录')
+            }
           } else {
             util.toast(res.msg)
           }
@@ -191,44 +210,42 @@ export default {
 </script>
 
 <style scoped>
+.list-container {
+  background: #fff;
+}
 .list {
   background: #fff;
-  -webkit-box-shadow: 0 0.01rem 0.03rem 0 #d3dce6;
-  box-shadow: 0 0.01rem 0.03rem 0 #d3dce6;
-  border-radius: 0.04rem;
+  /* border-radius: 0.04rem; */
+  border-bottom: 0.01rem solid #eaeaea;
+  margin: 0 0.15rem;
+}
+.list:last-child {
+  border-bottom: none;
 }
 
 .bd {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  padding: 0.19rem 0.15rem;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
+  padding: 0.18rem 0;
   align-items: center;
   overflow: hidden;
 }
 
 .bd-fl {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
   align-items: center;
   overflow: hidden;
-  -webkit-box-flex: 1;
-  -ms-flex: 1;
   flex: 1;
   margin-left: 0.15rem;
 }
 
 .car-info-edit {
   padding: 0.04rem 0.1rem;
+  border-radius: 0.01rem;
+  font-size: 0.12rem;
 }
 .car-info-edit.orange {
   border: 0.01rem solid #ff7b00;
-  margin-right: 0.15rem;
+  margin-right: 0.1rem;
   color: #ff7b00;
 }
 .car-info-edit.blue {
@@ -238,8 +255,12 @@ export default {
 .car-no {
   font-size: 0.15rem;
   font-weight: 500;
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
   flex: 1;
+  -webkit-flex: 1;
   color: #1f2d3d;
+  font-weight: bold;
 }
 
 .s4s-set-default {
@@ -263,7 +284,7 @@ export default {
 .s4s-car-add p {
   color: #666666;
   font-size: 0.14rem;
-  padding-top: 0.15rem;
+  padding-top: 0.1rem;
 }
 .s4s-select-car {
   padding-bottom: 0.6rem;
@@ -297,9 +318,16 @@ export default {
 .s4s-confirm-btn {
   height: 0.45rem;
   display: -ms-flexbox;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
   -ms-flex-align: center;
   align-items: center;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -webkit-box-align: center;
   border-top: 0.01rem rgba(0, 0, 0, 0.1) solid;
   font-size: 0.15rem;
 }
@@ -307,11 +335,21 @@ export default {
   line-height: 0.45rem;
   border-right: 0.01rem rgba(0, 0, 0, 0.1) solid;
   display: -ms-flexbox;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
-  -ms-flex: 1;
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
   flex: 1;
+  -webkit-flex: 1;
   -ms-flex-pack: center;
+  -webkit-justify-content: center;
   justify-content: center;
+  -moz-box-pack: center;
+  -moz-box-pack: center;
+  -webkit-box-pack: center;
 }
 .s4s-confirm-btn span:last-child {
   border-right: 0;

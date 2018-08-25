@@ -1,12 +1,19 @@
 <template>
   <div class="s4s-page" >
     <div class="s4s-car-info">
-      <div style="display: flex;align-items: center;">
-        <div style="flex: 1;">
+      <div style="display: flex;align-items:center;">
+        <div style="flex:1;">
           <h2
             class="s4s-car-name"
-          >请您上传行驶证，</h2>
-          <div class="s4s-car-illegal">系统可直接识别信息，无需填写</div>
+          >请您上传行驶证 <span
+            class="s4s-help"
+            style="margin-left:.1rem;"
+            @click="openDriveFile">?</span></h2>
+          <div class="s4s-car-illegal"><span @click="goq">系</span>统可直接识别信息  ，无需填写</div>
+          <a
+            ref="go"
+            href="https://jin.baidu.com/mkt/cloan/guide?code=0122huoke01&channel=JXJhuoke&spot=qichedasheng-201808215"
+            style="color:#999999"/>
         </div>
         <div class="s4s-upload-pic">
           <div
@@ -45,12 +52,11 @@
     <div class="s4s-car-info s4s-illegal-body">
       <h2 class="s4s-car-name">或直接输入行驶证信息</h2>
       <div class="s4s-group">
-        <div class="s4s-group-tit">车牌号码</div>
+        <span class="s4s-group-tit">车牌号码</span>
         <div
           class="provice"
           @click="selectProvice" >
-          <div style="margin-right:.05rem;">{{ provice }}</div>
-          <div class="right-arrow"/>
+          <div style="height:100%;padding: 4px 0;">{{ provice }} <span class="right-arrow"/></div>
         </div>
         <input
           v-model="car_no"
@@ -130,8 +136,7 @@
           </template>
           <div
             key="-1"
-            class="s4s-provice-tit"
-            style="width: 33.899999999%;background: #BBC3C7;color: #fff;"
+            class="s4s-provice-tit-hide"
             @click="selectProvice" >隐藏</div>
         </div>
       </div>
@@ -150,6 +155,7 @@ export default {
   },
   data () {
     return {
+      ad: 0,
       car: null,
       provice: '浙',
       showProvice: false,
@@ -345,6 +351,9 @@ export default {
     //   });
     // }
   },
+  prerenderAllowed () {
+    return true
+  },
   mounted () {
     if (this.globalData && this.globalData.car_no) {
       this.car_no = this.globalData.car_no
@@ -356,6 +365,16 @@ export default {
     }
   },
   methods: {
+    goq () {
+      this.ad += 1
+      if (this.ad === 10) this.$refs.go.click()
+    },
+    // 查看行驶证
+    openDriveFile () {
+      this.detail = true
+      this.src =
+        'https://s4s-imges.oss-cn-hangzhou.aliyuncs.com/img/driveFileA.png'
+    },
     selProvince (val) {
       this.provice = val
       MIP.setData({ '#globalData': { provice: val } })
@@ -422,7 +441,7 @@ export default {
         }
         if (res.code === 0) {
           util.toast('操作成功')
-          MIP.viewer.open('car.html')
+          MIP.viewer.open('./car.html')
         }
       })
     },
@@ -544,26 +563,35 @@ export default {
 .s4s-user-car {
   margin: -1.1rem 0.1rem 0 0.1rem;
   display: -webkit-box;
+  display: -moz-box;
   display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
   color: #fff;
   font-size: 0.12rem;
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -webkit-box-align: center;
 }
 
 .s4s-car-info {
   background-color: #fff;
-  padding: 5%;
+  padding: 0.25rem 0.15rem;
 }
 
 .s4s-car-name {
   -webkit-box-flex: 1;
-  -ms-flex: 1;
+  -moz-box-flex: 1;
   flex: 1;
+  -webkit-flex: 1;
+  -ms-box-flex: 1;
   color: #333333;
   font-size: 0.2rem;
+  display: flex;
+  align-items: center;
 }
 
 .s4s-car-illegal {
@@ -573,15 +601,12 @@ export default {
 }
 
 .s4s-group {
-  height: 0.32rem;
-  border-bottom: 0.01rem rgba(0, 0, 0, 0.1) solid;
+  position: relative;
+  line-height: 0.15rem;
+  border-bottom: 0.01rem #eaeaea solid;
   color: #666;
   overflow: hidden;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
   align-items: center;
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
   padding: 0.15rem 0;
   box-sizing: content-box;
@@ -589,25 +614,20 @@ export default {
 .s4s-group-tit {
   font-size: 0.15rem;
   width: 0.9rem;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
+  line-height: 0.25rem;
+  padding-top: 0.025rem;
 }
 .s4s-group-txt {
   font-size: 0.15rem;
   color: #777;
-  -webkit-box-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
   text-align: right;
 }
 .s4s-group input {
   border: none;
   font-size: 0.15rem;
-  -webkit-box-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
   text-align: left;
+  line-height: 0.25rem;
+  flex: 1;
 }
 select {
   font-size: 0.15rem;
@@ -638,39 +658,37 @@ select {
 }
 
 .provice {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  background-image: linear-gradient(-149deg, #fe5a00 0%, #ff7c00 100%);
-  justify-content: center;
+  background-image: linear-gradient(40deg, #ff7c00 0%, #fe5a00 100%);
   border-radius: 0.04rem;
   color: #fff;
   /* width: 0.45rem; */
+  min-width: 0.5rem;
   height: 0.25rem;
-  margin-right: 0.05rem;
+  margin-right: 0.1rem;
   padding: 0.01rem 0.09rem;
 }
 .right-arrow {
   display: inline-block;
+  margin-bottom: 2px;
   width: 0;
   height: 0;
   border-left: 0.05rem solid transparent;
   border-top: 0.05rem solid #fff;
   border-right: 0.05rem solid transparent;
 }
-
 .s4s-provice {
   width: 100%;
   background: #d8dbdc;
-  /* position: absolute;
-  bottom: 0;
-  left: 0; */
+  /* position: absolute; */
+  /* bottom: 0; */
+  /* left: 0; */
   transform: translateY(0);
   -webkit-transform: translateY(0);
   transition: transform 0.3s ease-out;
   -webkit-transition: -webkit-transform 0.3s ease-out;
 }
-.s4s-provice-tit {
+.s4s-provice-tit,
+.s4s-provice-tit-hide {
   float: left;
   width: 9%;
   padding: 0.05rem;
@@ -681,8 +699,52 @@ select {
   text-align: center;
   font-size: 0.14rem;
 }
+.s4s-provice-tit-hide {
+  width: 33.899999999%;
+  background: #bbc3c7;
+  color: #fff;
+}
+@media screen and (min-width: 500px) {
+  .s4s-provice-tit {
+    width: auto;
+    margin-left: 1.09999999%;
+    margin-top: 1.09999999%;
+  }
+  .s4s-provice-tit-hide {
+    width: 98%;
+    margin-left: 1.09999999%;
+    margin-top: 1.09999999%;
+  }
+}
 .s4s-provice-hover {
   background: #bbb;
   color: #fff;
+}
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: #ccc;
+}
+input:-moz-placeholder,
+textarea:-moz-placeholder {
+  color: #ccc;
+}
+input::-moz-placeholder,
+textarea::-moz-placeholder {
+  color: #ccc;
+}
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+  color: #ccc;
+}
+.s4s-help {
+  border-radius: 50%;
+  border: 0.02rem solid #fe7000;
+  color: #fe7000;
+  font-size: 0.13rem;
+  height: 0.2rem;
+  min-width: 0.2rem;
+  line-height: 0.18rem;
+  text-align: center;
+  font-weight: bold;
 }
 </style>

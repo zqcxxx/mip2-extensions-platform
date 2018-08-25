@@ -3,15 +3,16 @@
     <!-- 底部固定栏 -->
     <mip-fixed
       type="bottom"
-      class="mip-fixed">
+      bottom="0"
+      class="fb">
       <div class="fix-bottom">
         <a
-          href="tel:4006683666"
-          class="left">点击咨询</a>
-        <a
           class="right"
+          data-type="mip"
           @click="removeSku">购买服务</a>
-          <!-- <div class="right" on="tap:log.login"> xxxx </div> -->
+        <a
+          href="tel:4006028082"
+          class="left">免费电话咨询</a>
       </div>
     </mip-fixed>
     <!-- 底部固定栏 -->
@@ -22,7 +23,7 @@
   margin: 0 auto
 }
 
-.wrapper .mip-fixed {
+.wrapper .fb {
   height: 0.54rem;
   line-height: .54rem;
 }
@@ -34,19 +35,19 @@
   border-top: .014rem solid #d9d9d9;
   width: 100%;
   display: flex;
-  z-index: 1;
+  z-index: 999;
   font-size: .17rem;
   color: #fff
 }
 
 .fix-bottom .left {
-  width: 30%;
+  width: 70%;
   background-color: #007bc7;
   color: #fff;
 }
 
 .fix-bottom a.right {
-  width: 70%;
+  width: 30%;
   background-color: #e85555;
   color: #fff
 }
@@ -80,6 +81,9 @@ export default {
       pp: ''
     }
   },
+  prerenderAllowed () {
+    return true
+  },
   mounted () {
     MIP.viewer.fixedElement.init()
     // 自定义login事件
@@ -105,7 +109,7 @@ export default {
 
     if (this.info.userInfo.isreg === 1 && this.info.isLogin) {
       // window.location.href = '/user/register.html'
-      window.MIP.viewer.open('/user/register.html', { isMipLink: true })
+      window.MIP.viewer.open(config.data().burl + '/user/register.html', { isMipLink: true })
     }
 
     // document.querySelector('.right').setAttribute('href', '/product/relate.html?id=' + pp + '.html')
@@ -165,6 +169,9 @@ export default {
         storage.set('sessionIds', self.info.userInfo.sessionId)
         // 判断是否需要注册 如果注册 跳转注册页面
 
+        storage.set('isreg', self.info.userInfo.isreg)
+        storage.set('isLogin', self.info.isLogin)
+        storage.set('nickname', self.info.userInfo.nickname)
         if (self.info.userInfo.isreg === 1) {
           if (self.haverelate === 2) {
             storage.set('returnurl', config.data().burl + '/product/relate.html')
@@ -172,15 +179,7 @@ export default {
             storage.set('returnurl', config.data().burl + '/orders/confirm.html')
           }
           window.MIP.viewer.open(MIP.util.makeCacheUrl(config.data().burl + '/user/register.html'), { isMipLink: true })
-        }
-        console.log(self.info.userInfo.isreg, 33)
-        // console.log(this.info.userInfo.isreg,44)
-
-        storage.set('isreg', self.info.userInfo.isreg)
-        storage.set('isLogin', self.info.isLogin)
-        storage.set('nickname', self.info.userInfo.nickname)
-        console.log(self.info.userInfo.realname)
-        if (self.haverelate === 2) {
+        } else if (self.haverelate === 2) {
           window.MIP.viewer.open(MIP.util.makeCacheUrl(config.data().burl + '/product/relate.html'), { isMipLink: true })
         } else {
           window.MIP.viewer.open(MIP.util.makeCacheUrl(config.data().burl + '/orders/confirm.html'), { isMipLink: true })

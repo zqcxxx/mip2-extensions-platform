@@ -31,7 +31,7 @@
               :key="index1"
               class="order_number">
               <p>
-                <span class="list-title"><a href="">{{ val1.title }}({{ val1.areatitle }})</a></span>
+                <span class="list-title"><a href="javascript:;">{{ val1.title }}({{ val1.areatitle }})</a></span>
                 <span/>
                 <span class="color333">￥{{ val1.saleprice - val1.platformdiscount - val1.providerdiscount }}</span>
               </p>
@@ -91,7 +91,7 @@
               :key="index1"
               class="order_number">
               <p>
-                <span class="list-title"><a href="">{{ val1.title }}({{ val1.areatitle }})</a></span>
+                <span class="list-title"><a href="javascript:;">{{ val1.title }}({{ val1.areatitle }})</a></span>
                 <span/>
                 <span class="color333">￥{{ val1.saleprice - val1.platformdiscount - val1.providerdiscount }}</span>
               </p>
@@ -144,7 +144,7 @@
               :key="index1"
               class="order_number">
               <p>
-                <span class="list-title"><a href="">{{ val1.title }}({{ val1.areatitle }})</a></span>
+                <span class="list-title"><a href="javascript:;">{{ val1.title }}({{ val1.areatitle }})</a></span>
                 <span/>
                 <span class="color333">￥{{ val1.saleprice - val1.platformdiscount - val1.providerdiscount }}</span>
               </p>
@@ -193,7 +193,7 @@
           <div class="listContent">
             <div class="order_number">
               <p>
-                <span class="list-title"><a href="">{{ val.productsalesattrtitle }}({{ val.areatitle }})</a></span>
+                <span class="list-title"><a href="javascript:;">{{ val.productsalesattrtitle }}({{ val.areatitle }})</a></span>
                 <span/>
                 <span class="color333">￥{{ val.pricepayed }}</span>
               </p>
@@ -262,6 +262,12 @@
 <script>
 import config from '../../utils/config'
 export default {
+  props: {
+    payConfig: {
+      type: Object,
+      required: true
+    }
+  },
   data () {
     return {
       orders: [],
@@ -270,6 +276,8 @@ export default {
     }
   },
   mounted () {
+    MIP.util.platform.start()
+    console.log(MIP.util.platform.isWechatApp())
     console.log('This is 订单列表 !')
     const self = this
     let state = 0
@@ -308,17 +316,24 @@ export default {
         return res.json()
       }).then(function (data) {
         // console.log(data);
-        window.MIP.viewer.open(MIP.util.makeCacheUrl(config.data().burl + '/user/orders.html'), {isMipLink: true})
+        // window.MIP.viewer.open(MIP.util.makeCacheUrl(config.data().burl + "/user/orders.html"), {isMipLink: true});
+        window.location.reload()
       })
     },
     pay (ordersId, price) {
       console.log(ordersId, price)
+      let wxurl = ''
+      if (MIP.util.platform.isWechatApp()) {
+        wxurl = 'https://m.kuaifawu.com/pay/mip/wxpay'
+      } else {
+        wxurl = config.data().apiurl + '/pay/weixinorders?ordersid=' + ordersId
+      }
       let payConfig = {
         'fee': price,
         'endpoint': {
           // "baifubao":  "https://api.example.com/pay/baifubao",
           'alipay': config.data().apiurl + '/pay/alipayorders?ordersid=' + ordersId,
-          'weixin': config.data().apiurl + '/pay/weixinorders?ordersid=' + ordersId
+          'weixin': wxurl
         },
         'postData': {
           'orderid': ordersId

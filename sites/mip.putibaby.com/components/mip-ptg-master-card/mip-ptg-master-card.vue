@@ -181,15 +181,25 @@
         <!-- </a> -->
         <div class="picList">
           <p v-if="data.xc_list.length === 0">没有照片</p>
-          <div v-if="data.xc_list.length > 0">
-            <mip-img
+          <div
+            v-if="data.xc_list.length > 0"
+            class="allpic">
+            <!-- <mip-img
               v-for="pic in data.xc_list"
               :key="pic.big"
               :src="pic.big"
               layout="responsive"
               popup
               width="70px"
-              height="70px" />
+              height="70px" /> -->
+            <div
+              v-for="pic in data.xc_list"
+              :key="pic.big"
+              :src="pic.big"
+              :style="{backgroundImage: 'url(' + pic.big + ')', backgroundSize:'contain'}"
+              class="onepic"
+              @click.prevent="show(pic.big)"/>
+
           </div>
 
         </div>
@@ -366,6 +376,22 @@
         </tbody>
       </table>
     </mip-fixed>
+    <mip-fixed
+      v-if="showImg"
+      class="img_back"
+      type="top"
+      still
+      @click="hideImg">
+      <div
+        v-if="showImg"
+        class="img_div"
+        @touchmove.prevent="noop">
+        <mip-img
+          :src="imgUrl"
+        />
+      </div>
+    </mip-fixed>
+
   </div>
 
 </template>
@@ -586,7 +612,19 @@ body{
     margin-right: 10px;
     border-radius: 5px;
 }
+.allpic{
 
+    display: inline-block;
+
+}
+.onepic{
+    height: 70px;
+    width: 70px;
+    cursor: pointer;
+    display: inline-block;
+    margin-right: 10px;
+    border-radius: 5px;
+}
 .serverCard{
     width: 100%;
     border-radius: 5px;
@@ -912,6 +950,25 @@ td.secondCol {
     margin-right: 10px;
 }
 
+.img_back{
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  top: 0;
+  left: 0;
+  bottom:0;
+  z-index: 99996 !important;
+}
+.img_div{
+  width: 100%;
+  position: absolute;
+  z-index:99999;
+  top: 100px;
+  left: 0;
+}
+.img_div mip-img{
+  width: 100%;
+}
 </style>
 
 <script>
@@ -978,6 +1035,21 @@ API.unfavMaster = function (masterId, fn) {
     }, fn)
 }
 
+API.checkUnionAgain = function (opt, fn) {
+  API.wrapRet_(
+    'https://mip.putibaby.com/api/check_union_again', {
+      'opt': opt
+    },
+    fn)
+}
+API.reportVisit = function (zw, city, fn) {
+  API.wrapRet_(
+    'https://mip.putibaby.com/api/ajax_report_visit', {
+      'zw_id': zw,
+      'city': city
+    },
+    fn)
+}
 export default {
 
   props: {
@@ -996,16 +1068,81 @@ export default {
     return {
       data: pdata.data,
       isLogin: false,
-      isUnion: false
+      isUnion: false,
+      showImg: false,
+      imgUrl: ''
     }
   },
   computed: {
 
   },
+  beforeMount () {
+    function getParameterByName (name, url) {
+      if (!url) url = window.location.href
+      name = name.replace(/[[\]]/g, '\\$&')
+      var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)')
+      var results = regex.exec(url)
+      if (!results) return null
+      if (!results[2]) return ''
+      return decodeURIComponent(results[2].replace(/\+/g, ' '))
+    }
+    var qcity = getParameterByName('city') || ''
+    qcity = qcity.replace('市', '')
+    var cities = ['北京', '天津', '哈尔滨', '武汉', '上海', '长春', '济南', '长沙', '广州', '杭州', '洛阳', '南阳', '深圳', '沈阳', '石家庄', '西安', '湘潭', '徐州', '成都', '南京', '黄石', '郑州', '青岛', '大连', '常州', '唐山', '保定', '秦皇岛', '襄阳', '太原', '昆明', '兰州', '呼和浩特', '乌鲁木齐', '合肥', '南昌', '福州', '厦门', '南宁']
+    if (cities.lastIndexOf(qcity) >= 0) {
+      this.city = qcity
+      console.log(qcity)
+    }
+
+    var city = this.city || ''
+    API.reportVisit(3, city, function (isOk, res) {
+      if (isOk) {
+        console.log(res)
+      } else {
+        console.log(res)
+      }
+    })
+  },
   mounted () {
     console.log('This is master card component !')
     window.MIP.viewer.fixedElement.init()
     var self = this
+
+    window.addEventListener('show-page', () => {
+      console.log('show-page')
+      if (self.isLogin) {
+        API.getMasterInfo(self.data.info.id, function (isOk, data) {
+          console.log(data)
+          if (isOk) {
+            self.$set(self.data.info, 'isfav', data.fav)
+            self.$set(self.data.info, 'can_online_interview', data.can_online_interview)
+            self.$set(self.data.info, 'order_desc_str', data.order_desc_str)
+          // console.log(self);
+          } else {
+            console.warn(data)
+          }
+        })
+      }
+      if (self.isUnion || !self.isLogin) {
+        return
+      }
+
+      API.checkUnionAgain('', function (isOk, res) {
+        if (isOk) {
+          console.log(res)
+          self.isLogin = res.isLogin
+          self.isUnion = res.isUnion
+          // MIP.setData({'#isLogin': true})
+          // MIP.setData({'#isUnion': event.userInfo.isUnion})
+        } else {
+          console.log(res)
+        }
+      })
+    })
+    window.addEventListener('hide-page', () => {
+
+    })
+
     this.$element.customElement.addEventAction('logindone', event => {
       // 这里可以输出登录之后的数据
 
@@ -1031,9 +1168,26 @@ export default {
       } else if (event.userInfo.isUnion && origin === 'order_list') {
         console.log('logindone to order_list')
         window.MIP.viewer.open(MIP.util.makeCacheUrl('https://mip.putibaby.com/order_list'), {})
+      } else if (origin === 'fav' && !event.userInfo.isUnion) {
+        console.log('go to submit_ph')
+        window.MIP.viewer.open(MIP.util.makeCacheUrl('https://mip.putibaby.com/submit_ph?to=' + encodeURIComponent(window.location.href)), {})
       } else if (origin && !event.userInfo.isUnion) {
         console.log('go to submit_ph')
-        window.MIP.viewer.open(MIP.util.makeCacheUrl('https://mip.putibaby.com/' + origin), {})
+        if (origin === 'update_time') {
+          console.log('submit_ph to update_time')
+          var to = 'https://mip.putibaby.com/update_time_mip?mcode=' + self.data.codeid
+          window.MIP.viewer.open(MIP.util.makeCacheUrl(
+            'https://mip.putibaby.com/submit_ph?to=' + encodeURIComponent(to)), {})
+
+          window.MIP.viewer.open(MIP.util.makeCacheUrl(), {})
+        } else {
+          console.log('submit_ph to' + origin)
+          var to2 = 'https://mip.putibaby.com/' + origin
+          window.MIP.viewer.open(MIP.util.makeCacheUrl(
+            'https://mip.putibaby.com/submit_ph?to=' + encodeURIComponent(to2)), {})
+        }
+      } else {
+        console.log('no op while logindone')
       }
 
       API.getMasterInfo(self.data.info.id, function (isOk, data) {
@@ -1072,6 +1226,21 @@ export default {
         }
         return false
       }
+      if (!this.isUnion) {
+        var to = '/' + cmd
+        console.log(to)
+        if (cmd === 'fav') {
+          window.MIP.viewer.open(MIP.util.makeCacheUrl('https://mip.putibaby.com/submit_ph?to=' + encodeURIComponent(window.location.href)), {})
+        } else if (cmd === 'order_list') {
+          window.MIP.viewer.open(MIP.util.makeCacheUrl('https://mip.putibaby.com/submit_ph?to=' + encodeURIComponent(to)), {})
+        } else if (cmd === 'update_time') {
+          to = 'https://mip.putibaby.com/update_time_mip?mcode=' + this.data.codeid
+          window.MIP.viewer.open(MIP.util.makeCacheUrl('https://mip.putibaby.com/submit_ph?to=' + encodeURIComponent(to)), {})
+        }
+
+        return false
+      }
+
       return true
     },
 
@@ -1110,6 +1279,15 @@ export default {
     },
     load_data () {
       console.log('should set data')
+    },
+    show (e) {
+      this.showImg = true
+      this.imgUrl = e
+    },
+    hideImg () {
+      this.showImg = false
+    },
+    noop () {
     }
   }
 

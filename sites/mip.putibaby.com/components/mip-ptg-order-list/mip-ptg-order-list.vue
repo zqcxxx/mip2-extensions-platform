@@ -124,7 +124,7 @@
           <div
             v-if="order.showBtn_shanghu"
             class="tuijianBtn boldBtn"
-            @click="handleBtn_shanghu(order)">上户</div>
+            @click="handleBtn_shanghu(order)">邀请上户</div>
           <div
             v-if="order.showBtn_fukuan"
             class="tuijianBtn boldBtn"
@@ -150,6 +150,7 @@ body {
   background-color: #F1F5E2;
   padding:10px;
   padding-top: 1px;
+  padding-bottom: 40px;
 }
 
 .row {
@@ -413,9 +414,42 @@ export default {
   computed: {
 
   },
+  prerenderAllowed () {
+    return true
+  },
   mounted () {
     console.log('This is pty order list component !')
     var self = this
+    window.addEventListener('show-page', () => {
+      console.log('show-page')
+
+      API.ajaxOrderList({}, function (isOk, res) {
+        if (isOk) {
+          self.list = res.list
+        } else {
+          console.error(res)
+        }
+      })
+
+      // if (self.isUnion || !self.isLogin) {
+      //   return
+      // }
+
+      // API.checkUnionAgain('', function (isOk, res) {
+      //   if (isOk) {
+      //     console.log(res)
+      //     self.isLogin = res.isLogin
+      //     self.isUnion = res.isUnion
+      //     // MIP.setData({'#isLogin': true})
+      //     // MIP.setData({'#isUnion': event.userInfo.isUnion})
+      //   } else {
+      //     console.log(res)
+      //   }
+      // })
+    })
+    window.addEventListener('hide-page', () => {
+
+    })
     this.$element.customElement.addEventAction('echo', function (event, str) {
       console.log(event)
     })
@@ -434,12 +468,18 @@ export default {
     this.$element.customElement.addEventAction('logindone', function (event, str) {
       console.log(event)
       API.sessionId = event.sessionId
+      self.$set(self, 'isLogin', true)
+      self.$set(self, 'isUnion', event.userInfo.isUnion)
       if (!event.userInfo.isUnion) {
         console.log('logindone to submit_ph')
         window.MIP.viewer.open(MIP.util.makeCacheUrl('https://mip.putibaby.com/submit_ph?to=' + encodeURIComponent(window.location.href)), {})
       }
       API.ajaxOrderList({}, function (isOk, res) {
-        self.list = res.list
+        if (isOk) {
+          self.list = res.list
+        } else {
+          console.error(res)
+        }
       })
     })
   },
@@ -462,13 +502,14 @@ export default {
         from: null})
     },
     reload_ () {
-      window.location.reload()
-      var href = window.location.href
-      if (href.indexOf('?') >= 0) {
-        window.location.href = href + '&_=' + Math.random()
-      } else {
-        window.location.href = href + '?_=' + Math.random()
-      }
+      var self = this
+      API.ajaxOrderList({}, function (isOk, res) {
+        if (isOk) {
+          self.list = res.list
+        } else {
+          console.error(res)
+        }
+      })
     },
     handleBtn (order) {
       // window.location.href = '/master_card?mcode=' + order.master.mcode;
@@ -489,7 +530,8 @@ export default {
       if (skip) {
         API.zjqd(order.master.id, 'yuesao', function (isOk, data) {
           if (isOk) {
-            self.reload_()
+            window.MIP.viewer.open(MIP.util.makeCacheUrl('https://mip.putibaby.com/edit_contract?id=' + order.id), {})
+            // self.reload_()
           } else {
             console.warn(data)
             self.show_alert(data)
@@ -560,6 +602,16 @@ export default {
       }
     },
     handleBtn_dianhualianxi (order) {
+      var self = this
+      if (self.doingTel2) {
+        return
+      }
+      self.doingTel2 = 1
+
+      setTimeout(function () {
+        self.doingTel2 = 0
+      }, 2000)
+
       window.location.href = 'tel:' + order.master.phone_number
     },
     handleBtn_nidinghetong (order) {
@@ -599,13 +651,23 @@ export default {
         MIP.viewer.eventAction.execute('doshow', ele, {
           el_id: 'orderlist',
           title: '提示消息',
-          msg: '确定要现在执行上户?',
+          msg: '确定要邀请护理师上户吗?',
           from: this.handleBtn_shanghu,
           data: order })
       }
     },
 
     handleBtn_lianxikefu (order) {
+      var self = this
+      if (self.doingTel) {
+        return
+      }
+      self.doingTel = 1
+
+      setTimeout(function () {
+        self.doingTel = 0
+      }, 2000)
+
       window.location.href = 'tel:400-618-8835'
     },
     handleBtn_fukuan (order) {
